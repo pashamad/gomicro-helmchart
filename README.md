@@ -12,7 +12,7 @@ Install micro with the following commands:
 
 ```shell
 helm repo add micro https://raw.githubusercontent.com/pashamad/gomicro-helmchart/master/
-helm install micro micro/micro --set ns=default
+helm install micro micro/micro --set ns=default --namespace default
 ```
 
 ### Uninstall
