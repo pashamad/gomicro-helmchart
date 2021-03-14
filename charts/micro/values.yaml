@@ -4,3 +4,4 @@
 image: 
   repo: micro/micro
   tag: latest
+  ns: micro

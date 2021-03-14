@@ -7,16 +7,16 @@ kind: PersistentVolume
 apiVersion: v1
 metadata:
   name: store-pv
-  namespace: micro
+  namespace: {{ .Values.ns }}
 spec:
   claimRef:
     name: store-pvc
-    namespace: micro
+    namespace: {{ .Values.ns }}
   storageClassName: standard
   capacity:
     storage: 3Gi
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   hostPath:
     path: "/data"
 ---
@@ -24,11 +24,11 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: store-pvc
-  namespace: micro
+  namespace: {{ .Values.ns }}
 spec:
   storageClassName: standard
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 2Gi
@@ -37,75 +37,75 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: micro
-  namespace: micro
+  namespace: {{ .Values.ns }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: micro
-  namespace: micro
+  namespace: {{ .Values.ns }}
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - pods/log
-  - services
-  - secrets
-  - namespaces
-  verbs:
-  - get
-  - create
-  - update
-  - delete
-  - list
-  - patch
-  - watch
-- apiGroups:
-  - "apps"
-  resources:
-  - deployments
-  verbs:
-  - create
-  - update
-  - delete
-  - list
-  - patch
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  - pods
-  - pods/logs
-  verbs:
-  - get
-  - watch
-  - list
-- apiGroups:
-  - "networking.k8s.io"
-  resources:
-  - networkpolicy
-  - networkpolicies
-  verbs:
-  - get
-  - create
-  - update
-  - delete
-  - deletecollection
-  - list
-  - patch
-  - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - services
+      - secrets
+      - namespaces
+    verbs:
+      - get
+      - create
+      - update
+      - delete
+      - list
+      - patch
+      - watch
+  - apiGroups:
+      - "apps"
+    resources:
+      - deployments
+    verbs:
+      - create
+      - update
+      - delete
+      - list
+      - patch
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - pods
+      - pods/logs
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - "networking.k8s.io"
+    resources:
+      - networkpolicy
+      - networkpolicies
+    verbs:
+      - get
+      - create
+      - update
+      - delete
+      - deletecollection
+      - list
+      - patch
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: micro
-  namespace: micro
+  namespace: {{ .Values.ns }}
 subjects:
-- kind: ServiceAccount
-  name: micro
-  namespace: micro
+  - kind: ServiceAccount
+    name: micro
+    namespace: {{ .Values.ns }}
 roleRef:
   kind: ClusterRole
   name: micro
@@ -115,42 +115,42 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: micro
-  namespace: micro
+  namespace: {{ .Values.ns }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: micro
 subjects:
-- kind: ServiceAccount
-  name: micro
+  - kind: ServiceAccount
+    name: micro
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  namespace: micro
+  namespace: {{ .Values.ns }}
   name: micro
 spec:
   template:
     spec:
       serviceAccountName: micro
       containers:
-      - name: micro
-        env:
-        - name: MICRO_PROFILE
-          value: kubernetes
-        - name: MICRO_PROXY
-          value: "network.micro.svc.cluster.local:8443"
-        - name: MICRO_SERVER_IMAGE
-          value: "{{ .Values.image.repo }}:{{ .Values.image.tag }}"
-        args:
-        - server
-        image: "{{ .Values.image.repo }}:{{ .Values.image.tag }}"
-        imagePullPolicy: Always
-        volumeMounts:
-        - mountPath: "/store"
-          name: store-mount
-      volumes: 
-      - name: store-mount
-        persistentVolumeClaim:
-          claimName: store-pvc
+        - name: micro
+          env:
+            - name: MICRO_PROFILE
+              value: kubernetes
+            - name: MICRO_PROXY
+              value: "network.micro.svc.cluster.local:8443"
+            - name: MICRO_SERVER_IMAGE
+              value: "{{ .Values.image.repo }}:{{ .Values.image.tag }}"
+          args:
+            - server
+          image: "{{ .Values.image.repo }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: "/store"
+              name: store-mount
+      volumes:
+        - name: store-mount
+          persistentVolumeClaim:
+            claimName: store-pvc
       restartPolicy: OnFailure
